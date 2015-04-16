@@ -18,17 +18,21 @@ import Data.ByteString.Char8 (pack)
 import Network.Transport.ZMQ (createTransport, defaultZMQParameters)
 import qualified Data.ByteString.Lazy as BSL
 import Text.Printf
-
-
-
+--
+import Common
 
 subscriber :: ProcessId -> Process ()
 subscriber them = do
     (sc, rc) <- newChan :: Process (SendPort PushEvent, ReceivePort PushEvent)
     send them sc
-    forever $ do
-      n <- receiveChan rc
-      liftIO $ print n
+    Connect sc' <- receiveChan rc 
+    spawnLocal $ forever $ do
+      Message msg <- receiveChan rc
+      liftIO $ putStrLn ("msg : " ++ msg)
+    forever $ do 
+      str <- liftIO getLine
+      sendChan sc' str
+
 
 
 initialClient :: Process ()
