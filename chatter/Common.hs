@@ -9,7 +9,7 @@ import Data.Binary
 import Data.Typeable
 
 data PushEvent = Connect (SendPort String)
-               | Message String
+               | Message (ProcessId,String)
                deriving Typeable
 
 instance Binary PushEvent where 
