@@ -22,6 +22,7 @@ import Text.Printf
 pingServer :: Process ()
 pingServer = forever $ do
   them <- expect
+  say $ "got " ++ show them
   sendChan them ()
   -- TODO: should this be automatic?
   reconnectPort them

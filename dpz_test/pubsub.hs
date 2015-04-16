@@ -17,7 +17,7 @@ import Text.Printf
 
 pubSub :: NTZ.TransportInternals -> Process ()
 pubSub transport = do
-  (chIn, chOut) <- pair (Pub, Sub) (PairOptions (Just "tcp://127.0.0.1:5452"))
+  (chIn, chOut) <- pair (Pub, Sub) (PairOptions (Just "tcp://173.255.231.36:5452"))
   Just port <- registerSend transport chIn
   replicateM 10 $ spawnLocal $ do
       us <- getSelfPid
@@ -35,6 +35,6 @@ pubSub transport = do
   closeSendEx port
 
 main = do
-  (zmq,transport) <- createTransportExposeInternals defaultZMQParameters "127.0.0.1"
+  (zmq,transport) <- createTransportExposeInternals defaultZMQParameters "173.255.231.36"
   node <- newLocalNode transport initRemoteTable
   runProcess node (pubSub zmq) 
