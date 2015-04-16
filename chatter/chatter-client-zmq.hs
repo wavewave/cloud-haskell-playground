@@ -5,19 +5,13 @@ module Main where
 
 import System.Environment
 import Control.Applicative
-import Control.Monad (void, forM_, forever, replicateM_)
-import Control.Concurrent.MVar
-import Control.Concurrent (forkOS, threadDelay)
-import Control.Applicative
+import Control.Monad (forever)
 import Control.Distributed.Process
 import Control.Distributed.Process.Node
-import Criterion.Types
-import Criterion.Measurement as M
-import Data.Binary (encode, decode)
+import Data.Binary (decode)
 import Data.ByteString.Char8 (pack)
 import Network.Transport.ZMQ (createTransport, defaultZMQParameters)
 import qualified Data.ByteString.Lazy as BSL
-import Text.Printf
 --
 import Common
 
@@ -33,8 +27,6 @@ subscriber them = do
       str <- liftIO getLine
       sendChan sc' str
 
-
-
 initialClient :: Process ()
 initialClient = do
   them <- liftIO $ decode <$> BSL.readFile "server.pid"
@@ -42,7 +34,6 @@ initialClient = do
 
 main :: IO ()
 main = do
-    initializeTime
     [host] <- getArgs
     transport <- createTransport defaultZMQParameters (pack host)
     node <- newLocalNode transport initRemoteTable

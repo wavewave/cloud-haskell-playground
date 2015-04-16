@@ -4,21 +4,14 @@ module Main where
 -- | Like Latency, but creating lots of channels
 
 import System.Environment
-import Control.Applicative
-import Control.Monad (void, forM_, forever, replicateM_)
-import Control.Concurrent.MVar
-import Control.Concurrent (forkOS, threadDelay)
+import Control.Monad (forever)
 import Control.Concurrent.STM
-import Control.Applicative
 import Control.Distributed.Process
 import Control.Distributed.Process.Node
-import Criterion.Types
-import Criterion.Measurement as M
-import Data.Binary (encode, decode)
+import Data.Binary (encode)
 import Data.ByteString.Char8 (pack)
 import Network.Transport.ZMQ (createTransport, defaultZMQParameters)
 import qualified Data.ByteString.Lazy as BSL
-import Text.Printf
 --
 import Common 
 
@@ -56,7 +49,6 @@ initialServer var = do
 main :: IO ()
 main = do
     var <- newTVarIO (0,"init")
-    initializeTime
     [host] <- getArgs
     transport <- createTransport defaultZMQParameters (pack host)
     node <- newLocalNode transport initRemoteTable
