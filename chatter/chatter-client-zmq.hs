@@ -7,9 +7,11 @@ import System.Environment
 import Control.Applicative
 import Control.Monad (forever)
 import Control.Distributed.Process
+import Control.Distributed.Process.Internal.Types (NodeId(..),ProcessId(..))
 import Control.Distributed.Process.Node
 import Data.Binary (decode)
 import Data.ByteString.Char8 (pack)
+import Network.Transport (EndPoint(..),newEndPoint)
 import Network.Transport.ZMQ (createTransport, defaultZMQParameters)
 -- import Network.Transport.TCP
 import qualified Data.ByteString.Lazy as BSL
@@ -34,14 +36,16 @@ subscriber them = do
       str <- liftIO getLine
       sendChan sc' str
 
-initialClient :: Process ()
-initialClient = do
+initialClient :: NodeId -> Process ()
+initialClient nid = do
   them <- liftIO $ decode <$> BSL.readFile "server.pid"
-  subscriber them
+  subscriber (them {processNodeId = nid})
 
 main :: IO ()
 main = do
-    [host] <- getArgs
+    [host,serverAddr] <- getArgs
     transport <- createTransport defaultZMQParameters (pack host)
+    Right endpoint <- newEndPoint transport
+    let nid = NodeId (address endpoint)
     node <- newLocalNode transport rtable
-    runProcess node initialClient
+    runProcess node (initialClient nid)

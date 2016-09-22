@@ -5,6 +5,7 @@ import Data.ByteString.Char8 (pack)
 import Data.Map
 import Control.Exception
 import System.Environment
+import System.IO
 
 main :: IO ()
 main = do
@@ -14,6 +15,7 @@ main = do
   Right endpoint  <- newEndPoint transport
   forkIO $ echoServer endpoint serverDone
   putStrLn $ "Echo server started at " ++ show (address endpoint)
+  hPutStrLn stderr $ "Echo server started at " ++ show (address endpoint)  
   readMVar serverDone `onCtrlC` closeTransport transport
 
 echoServer :: EndPoint -> MVar () -> IO ()
