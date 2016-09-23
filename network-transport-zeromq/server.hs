@@ -29,7 +29,7 @@ echoServer endpoint serverDone = go empty
           connMVar <- newEmptyMVar
           forkIO $ do
             Right conn <- connect endpoint addr rel defaultConnectHints
-            putMVar connMVar conn 
+            putMVar connMVar conn
           go (insert cid connMVar cs) 
         Received cid payload -> do
           forkIO $ do

@@ -11,7 +11,8 @@ import Control.Distributed.Process.Internal.Types (NodeId(..),ProcessId(..))
 import Control.Distributed.Process.Node
 import Data.Binary (decode)
 import Data.ByteString.Char8 (pack)
-import Network.Transport (EndPoint(..),newEndPoint)
+-- import Network.Transport (EndPoint(..),EndPointAddress(..), Reliability(..), newEndPoint, connect, defaultConnectHints)
+import qualified Network.Transport as NT
 import Network.Transport.ZMQ (createTransport, defaultZMQParameters)
 -- import Network.Transport.TCP
 import qualified Data.ByteString.Lazy as BSL
@@ -36,16 +37,49 @@ subscriber them = do
       str <- liftIO getLine
       sendChan sc' str
 
-initialClient :: NodeId -> Process ()
-initialClient nid = do
-  them <- liftIO $ decode <$> BSL.readFile "server.pid"
-  subscriber (them {processNodeId = nid})
+initialClient :: ProcessId -> Process ()
+initialClient them = do
+  subscriber them -- (them {processNodeId = nid})
 
 main :: IO ()
 main = do
     [host,serverAddr] <- getArgs
     transport <- createTransport defaultZMQParameters (pack host)
-    Right endpoint <- newEndPoint transport
-    let nid = NodeId (address endpoint)
+    Right endpoint <- NT.newEndPoint transport
+
+    let addr = NT.EndPointAddress (pack serverAddr)
+    r <- NT.connect endpoint addr NT.ReliableOrdered NT.defaultConnectHints
+    case r of
+      Left err -> error (show err)
+      Right conn -> do
+        event <- NT.receive endpoint 
+        print event
+        event' <- NT.receive endpoint
+        case event' of
+          NT.Received _ payload -> do
+            print payload
+            
+{-         orkIO . forever $ do
+    n <- randomIO :: IO Int
+    send conn [pack ("Hello world : " ++ show n)]
+    threadDelay 1000000
+
+
+        return () -}
+    
+    {- Right conn -}
+
+    {- 
+    them <- decode <$> BSL.readFile "server.pid"
+    let nid_them = processNodeId them
+    print (processNodeId them)
+    print (processLocalId them)
+    let serverAddr = nodeAddress nid_them
+    putStrLn$ "serverAddr:" ++ show  serverAddr
+
+
+
+    -- let nid = NodeId (address endpoint)
     node <- newLocalNode transport rtable
-    runProcess node (initialClient nid)
+    runProcess node (initialClient them)
+    -}
