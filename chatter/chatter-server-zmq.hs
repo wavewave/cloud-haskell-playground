@@ -43,7 +43,7 @@ server var = forever $ do
 
   spawnLocal $ forever $ do 
     msg <- receiveChan rc
-    liftIO $ print msg
+    liftIO $ hPutStrLn stderr msg
     liftIO $ atomically $ do
       (i,_) <- readTVar var 
       writeTVar var (i+1,Just (theirpid,msg))
@@ -63,12 +63,12 @@ server var = forever $ do
   spawnLocal $ do
     liftIO $ threadDelay 1000000
     let nid = processNodeId theirpid 
-    liftIO $ print nid
+    liftIO $ hPutStrLn stderr (show nid)
     spawn nid ($(mkClosure 'launchMissile) us)
     return ()
 
   n :: Int <- expect
-  liftIO $ print n
+  liftIO $ hPutStrLn stderr (show n)
   return ()
 
 
@@ -102,7 +102,7 @@ connBroker var endpoint serverDone = go empty
             NT.close conn 
           go (delete cid cs) 
         NT.EndPointClosed -> do
-          putStrLn "Echo server exiting"
+          hPutStrLn stderr "Echo server exiting"
           putMVar serverDone ()
         o -> print o >> go cs
 
@@ -144,8 +144,9 @@ main = do
     forkIO $ runProcess node (initialServer var)
     
     Right endpoint <- NT.newEndPoint transport
+    hPutStrLn stderr $ "Echo server started at " ++ show (NT.address endpoint)
+    
     forkIO $ connBroker var endpoint serverDone
 
     
-    hPutStrLn stderr $ "Echo server started at " ++ show (NT.address endpoint)
     readMVar serverDone `onCtrlC` NT.closeTransport transport
