@@ -71,16 +71,82 @@ server var = forever $ do
   liftIO $ hPutStrLn stderr (show n)
   return ()
 
+
+
+connBroker :: MVar (Maybe ProcessId) -> NT.EndPoint -> MVar () -> IO ()
+connBroker var endpoint serverDone = go empty
+  where
+    go :: Map NT.ConnectionId (MVar NT.Connection) -> IO () 
+    go cs = do
+      event <- NT.receive endpoint
+      case event of
+        NT.ConnectionOpened cid rel addr -> do
+          connMVar <- newEmptyMVar
+          val <- takeMVar var
+          forkIO $ void $ do
+            Right conn <- NT.connect endpoint addr rel NT.defaultConnectHints
+            hPutStrLn stderr ("connection opened with " ++ show addr )
+            putMVar connMVar conn
+            NT.send conn [BSL.toStrict (encode val)]
+            
+          go (insert cid connMVar cs) 
+        NT.Received cid payload -> do
+          forkIO $ do
+            conn <- readMVar (cs ! cid)
+            NT.send conn payload 
+            return ()
+          go cs
+        NT.ConnectionClosed cid -> do 
+          forkIO $ do
+            conn <- readMVar (cs ! cid)
+            NT.close conn 
+          go (delete cid cs) 
+        NT.EndPointClosed -> do
+          hPutStrLn stderr "Echo server exiting"
+          putMVar serverDone ()
+        o -> print o >> go cs
+
+onCtrlC :: IO a -> IO () -> IO a
+p `onCtrlC` q = catchJust isUserInterrupt p (const $ q >> p `onCtrlC` q)
+  where
+    isUserInterrupt :: AsyncException -> Maybe () 
+    isUserInterrupt UserInterrupt = Just ()
+    isUserInterrupt _             = Nothing
+
+{- 
 initialServer :: TVar (Int,Maybe (ProcessId,String)) -> Process ()
 initialServer var = do
   us <- getSelfPid
   liftIO $ BSL.writeFile "server.pid" (encode us)
   server var
+-}
+
+initialServer :: MVar (Maybe ProcessId) -> Process ()
+initialServer var = do
+    pid <- getSelfPid
+    spawnLocal $ forever $ do
+      liftIO $ putMVar var (Just pid)
+      -- val <- liftIO $ takeMVar var
+      liftIO $ hPutStrLn stderr $ "in initialServer: " ++ show pid
+    forever $ do
+      str :: String <- expect
+      liftIO $ hPutStrLn stderr $ "got message : " ++ str
+
+    
 
 main :: IO ()
 main = do
-    var <- newTVarIO (0,Nothing)
+    var <- newMVar Nothing -- newTVarIO (0,Nothing)
+    serverDone <- newEmptyMVar
     [host] <- getArgs
     transport <- createTransport defaultZMQParameters (pack host)
     node <- newLocalNode transport rtable
-    runProcess node (initialServer var)
+    forkIO $ runProcess node (initialServer var)
+    
+    Right endpoint <- NT.newEndPoint transport
+    hPutStrLn stderr $ "Echo server started at " ++ show (NT.address endpoint)
+    
+    forkIO $ connBroker var endpoint serverDone
+
+    
+    readMVar serverDone `onCtrlC` NT.closeTransport transport
