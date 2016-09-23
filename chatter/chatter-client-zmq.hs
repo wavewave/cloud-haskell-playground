@@ -1,4 +1,7 @@
-{-# LANGUAGE LambdaCase, OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Main where
 
 -- | Like Latency, but creating lots of channels
@@ -57,7 +60,14 @@ main = do
         event' <- NT.receive endpoint
         case event' of
           NT.Received _ payload -> do
-            print payload
+            let r :: Maybe ProcessId = decode (BSL.fromChunks payload)
+            case r of
+              Nothing -> print "nothin"
+              Just them -> do
+                node <- newLocalNode transport rtable
+                runProcess node $ do
+                  send them ("ahhhaha" :: String)
+              
             
 {-         orkIO . forever $ do
     n <- randomIO :: IO Int

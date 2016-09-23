@@ -87,7 +87,7 @@ connBroker var endpoint serverDone = go empty
             Right conn <- NT.connect endpoint addr rel NT.defaultConnectHints
             hPutStrLn stderr ("connection opened with " ++ show addr )
             putMVar connMVar conn
-            NT.send conn [pack (show val)]
+            NT.send conn [BSL.toStrict (encode val)]
             
           go (insert cid connMVar cs) 
         NT.Received cid payload -> do
@@ -123,12 +123,16 @@ initialServer var = do
 
 initialServer :: MVar (Maybe ProcessId) -> Process ()
 initialServer var = do
-  forever $ do
     pid <- getSelfPid
-    liftIO $ putMVar var (Just pid)
-    -- val <- liftIO $ takeMVar var
-    liftIO $ hPutStrLn stderr $ "in initialServer: " ++ show pid
+    spawnLocal $ forever $ do
+      liftIO $ putMVar var (Just pid)
+      -- val <- liftIO $ takeMVar var
+      liftIO $ hPutStrLn stderr $ "in initialServer: " ++ show pid
+    forever $ do
+      str :: String <- expect
+      liftIO $ hPutStrLn stderr $ "got message : " ++ str
 
+    
 
 main :: IO ()
 main = do
