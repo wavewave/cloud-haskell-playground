@@ -20,7 +20,8 @@ let
 	PORTG = "${portg}";
 	HOSTL = "${hostl}";
 	PORTL = "${portl}";
-	MASTER = "pid://192.168.1.102:16006:10.233.2.2:16006:0:10";
+	MASTERIP = "192.168.1.102";
+	MASTERPORT = "16007";
       };
      
       users.extraUsers.wavewave = {

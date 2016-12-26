@@ -11,6 +11,11 @@
         hostPath = "/home/wavewave";
 	isReadOnly = true;
       };
+      "/data/wavewave" = {
+        hostPath = "/data/wavewave";
+	isReadOnly = true;
+      };
+      
     };
     
   };
@@ -26,6 +31,11 @@
         hostPath = "/home/wavewave";
 	isReadOnly = true;
       };
+      "/data/wavewave" = {
+        hostPath = "/data/wavewave";
+	isReadOnly = true;
+      };
+      
     };
     
   };
