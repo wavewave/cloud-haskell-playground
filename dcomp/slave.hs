@@ -42,6 +42,7 @@ slave mpid = do
   pid <- getSelfPid
   liftIO $ print pid
   liftIO $ putStrLn (show mpid)
+  send mpid pid
   
 main :: IO ()
 main = do
