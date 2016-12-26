@@ -6,6 +6,13 @@
       { hostPort = 16006; }
       { hostPort = 16007; }
     ];
+    deployment.container.bindMounts = {
+      "/home/wavewave" = {
+        hostPath = "/home/wavewave";
+	isReadOnly = true;
+      };
+    };
+    
   };
   nodemark = {
     deployment.targetEnv = "container";
@@ -14,6 +21,13 @@
       { hostPort = 17007; }
       { hostPort = 17008; }
     ];
+    deployment.container.bindMounts = {
+      "/home/wavewave" = {
+        hostPath = "/home/wavewave";
+	isReadOnly = true;
+      };
+    };
+    
   };
 
 }
