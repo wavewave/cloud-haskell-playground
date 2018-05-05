@@ -8,10 +8,11 @@ import           Network.Transport.ZMQ (createTransport, defaultZMQParameters)
 import           System.Environment
 
 import           Server
+import           Type
 
 main :: IO ()
 main = do
-  var <- newTVarIO 0
+  var <- newTVarIO (MyData 0 "d")
   [host] <- getArgs
   transport <- createTransport defaultZMQParameters (pack host)
   node <- newLocalNode transport initRemoteTable

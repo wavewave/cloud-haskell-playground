@@ -5,10 +5,11 @@ import           Control.Distributed.Process
 import           Control.Monad (forever)
 import           Data.Binary (decode)
 import qualified Data.ByteString.Lazy as BSL
+import           Type
 
 subscriber :: ProcessId -> Process ()
 subscriber them = do
-  (sc, rc) <- newChan :: Process (SendPort Int, ReceivePort Int)
+  (sc, rc) <- newChan :: Process (SendPort MyData, ReceivePort MyData)
   send them sc
   forever $ do
     n <- receiveChan rc

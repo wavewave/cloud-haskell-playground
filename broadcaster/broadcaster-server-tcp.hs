@@ -9,10 +9,12 @@ import           Network.Transport.TCP (createTransport
 import           System.Environment
 
 import           Server
+import           Type
+
 
 main :: IO ()
 main = do
-  var <- newTVarIO 0
+  var <- newTVarIO (MyData 0 "d")
   [host] <- getArgs
   let addr = defaultTCPAddr host "9393"
   Right transport <- createTransport addr defaultTCPParameters
