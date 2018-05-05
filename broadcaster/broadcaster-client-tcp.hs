@@ -11,8 +11,8 @@ import Client
 
 main :: IO ()
 main = do
-  [host] <- getArgs
-  let addr = defaultTCPAddr host "9394"
+  [host,port] <- getArgs
+  let addr = defaultTCPAddr host port
   Right transport <- createTransport addr defaultTCPParameters
   node <- newLocalNode transport initRemoteTable
   runProcess node initialClient
